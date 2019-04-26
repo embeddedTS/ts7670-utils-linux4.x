@@ -1,0 +1,4 @@
+*.o
+tshwctl
+tsmicroctl
+gpioctl
