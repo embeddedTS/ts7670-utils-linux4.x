@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
+/* Copyright (c) 2019, Technologic Systems Inc. */
+
 #ifndef _GPIOLIB_H_
 
 int gpio_direction(int gpio, int dir);

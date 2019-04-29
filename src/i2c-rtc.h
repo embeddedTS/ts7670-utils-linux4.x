@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
+/* Copyright (c) 2019, Technologic Systems Inc. */
+
 #ifndef __I2C_RTC_H_
 #define __I2C_RTC_H_
 

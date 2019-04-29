@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2019, Technologic Systems Inc.
+
 #   This file meant to be called only from prep_image script as a post
 #   set of steps to run after the image file has been unmounted
 #

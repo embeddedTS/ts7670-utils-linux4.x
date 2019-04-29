@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
+/* Copyright (c) 2019, Technologic Systems Inc. */
+
 #ifndef _PWMLIB_H_
 
 int pwm_export(int chip, int chan);
