@@ -30,11 +30,9 @@ POST_SCRIPTS="eMMC_post"
 #   fsck last partition
 #   Mount last partition
 #   Remove /etc/ssh/*key*
-#   Touch /firstboot to cause re-gen of SSH keys on first boot
-#   Remove and touch /etc/machine-id
+#   Touch the file /firstboot. This is used in Debian Stretch to recreate keys
+#   Remove /etc/machine-id and touch it to cause systemd to recreate properly
 #   Remove /var/lib/dbus/machine-id
-#   Comment "#" /etc/udev/rules.d/75-persistent-net-generator.rules
-#   Remove /etc/udev/rules.d/70-persistent-net.rules
 #   Remove /boot/*.imx
 #   Remove /boot/*.hex
 #   Remove /boot/*.ub
@@ -50,8 +48,8 @@ POST_SCRIPTS="eMMC_post"
 #     /var/lib/systemd/random-seed
 #   Remove /var/log/*, only files, leave folder tree intact
 #   Remove any packages in /var/cache/apt/archives (equiv. to apt-get clean)
+#   Remove /var/backups/*
 #   Set /root.version to current date
-#   Set up /etc/resolv.conf as symlink to systemd
 #   Remove root passwd if any, handles passwd and shadow
 #   Set up /etc/hosts from /etc/hostname, use Debian defaults otherwise
 #   If /boot/Image exists, pull linux version from this file, and remove all
@@ -159,8 +157,6 @@ touch mount_point/firstboot
 rm -rfv mount_point/etc/machine-id
 rm -rfv mount_point/var/lib/dbus/machine-id
 touch mount_point/etc/machine-id
-rm mount_point/etc/udev/rules.d/70-persistent-net.rules
-echo "#" > mount_point/etc/udev/rules.d/75-persistent-net-generator.rules
 rm -rfv mount_point/boot/*.imx
 rm -rfv mount_point/boot/*.hex
 rm -rfv mount_point/boot/*.ub
@@ -175,13 +171,12 @@ find mount_point/var/log/ -type f -print0 | xargs -0 rm -v
 echo "Cleaning up apt packages and temp files (apt-get clean)"
 rm -rfv mount_point/var/cache/apt/archives/* mount_point/var/cache/apt/pkgcache.bin mount_point/var/cache/apt/srcpkgcache.bin
 
+echo "Removing /var/backups/*"
+rm -rfv mount_point/var/backups/*
+
 vers=`date +%Y-%m-%d`
 echo "Setting /root.version to $vers"
 echo $vers > mount_point/root.version
-
-echo "Using systemd/networkd, setting /etc/resolv.conf as a symlink to /run/systemd/resolve/resolv.conf"
-rm mount_point/etc/resolv.conf
-ln -sf /run/systemd/resolve/resolv.conf mount_point/etc/resolv.conf
 
 echo "Removing root passwd and enabling shadow"
 awk -F':' '{if($1 == "root") {$2 = "x"; print $0} else {print}}' OFS=":" mount_point/etc/passwd > mount_point/etc/passwd.new
