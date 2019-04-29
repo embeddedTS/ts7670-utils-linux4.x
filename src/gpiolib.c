@@ -11,6 +11,9 @@
 
 #ifdef CTL
 #include <getopt.h>
+const char copyright[] = "Copyright (c) Technologic Systems - " __DATE__ " - "
+  GITCOMMIT;
+
 #endif
 #include "gpiolib.h"
 
@@ -220,7 +223,9 @@ int gpio_write(int gpio, int val)
 #ifdef CTL
 
 static void usage(char **argv) {
-	fprintf(stderr, "Usage: %s [OPTION] ...\n"
+	fprintf(stderr, 
+	  "%s\n\n"
+	  "Usage: %s [OPTION] ...\n"
 	  "Simple gpio access\n"
 	  "\n"
 	  "  -h, --help             This message\n"
@@ -229,8 +234,9 @@ static void usage(char **argv) {
 	  "  -l, --clrout <dio>     Sets a sysfs DIO output value low\n"
 	  "  -d, --ddrout <dio>     Set sysfs DIO to an output\n"
 	  "  -r, --ddrin <dio>      Set sysfs DIO to an input\n"
-	  "  -w, --waitfor <dio>    Wait for IO to change to configured edge\n",
-	  argv[0]
+	  "  -w, --waitfor <dio>    Wait for IO to change to configured edge\n"
+	  "\n",
+	  copyright, argv[0]
 	);
 }
 

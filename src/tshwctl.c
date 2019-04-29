@@ -15,7 +15,8 @@
 #include "pwmlib.h"
 #include "i2c-rtc.h"
 
-const char copyright[] = "Copyright (c) Technologic Systems - " __DATE__ ;
+const char copyright[] = "Copyright (c) Technologic Systems - " __DATE__ " - "
+  GITCOMMIT;
 
 int model = 0;
 
@@ -36,7 +37,9 @@ int get_model()
 }
 
 static void usage(char **argv) {
-	fprintf(stderr, "Usage: %s [OPTION] ...\n"
+	fprintf(stderr,
+	  "%s\n\n"
+	  "Usage: %s [OPTION] ...\n"
 	  "Technologic Systems Hardware access\n"
 	  "\n"
 	  "  -i, --info              Print device information\n"
@@ -45,8 +48,9 @@ static void usage(char **argv) {
 	  "  -4, --485speed=<baud>   Baud rate, required for RS-485HD to function\n"
 	  "  -1, --modbuspoweron     Enable VIN to modbus port\n"
 	  "  -Z, --modbuspoweroff    Turn off VIN to modbus port\n"
-	  "  -h, --help              This message\n",
-	  argv[0]
+	  "  -h, --help              This message\n"
+	  "\n",
+	  copyright, argv[0]
 	);
 }
 
