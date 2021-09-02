@@ -149,6 +149,30 @@ int main(int argc, char **argv)
         if (opt_rtcinfo) {
 		rtcfd = i2c_rtc_init();
 
+#ifdef RTCTEMP
+		/* Enable the TSE bit.
+		 * NOTE! The kernel driver is intended to handle the RTC but
+		 * does not use the temperature compensation. Enabling this may
+		 * cause the RTC driver (or system time) to compensate more than
+		 * it should. However, this is needed for RTC temp sensing
+		 * results.
+		 *
+		 * Calibration and adjustment of the temp sensing does not occur
+		 * here or in kernel. See ISL1202 datasheet for more info
+		 *
+		 * To enable this chunk of code, compile with:
+		 * make CFLAGS="-DRTCTEMP"
+		 */
+		i2c_rtc_read(rtcfd, 0x6F, &rtcdat[0], 0xd, 1);
+                rtcdat[0] = (0xc0 | (rtcdat[0] & 0x1f));
+		i2c_rtc_write(rtcfd, 0x6F, &rtcdat[0], 0xd, 1);
+
+		i2c_rtc_read(rtcfd, 0x6F, &rtcdat[0], 0x28, 2);
+		printf("rtctemp_millicelsius=%d\n",
+		  ((rtcdat[0]|(rtcdat[1]<<8))*500)-273000);
+#endif // RTCTEMP
+
+
 		i2c_rtc_read(rtcfd, 0x6F, &rtcdat[1], 0x16, 5);
 		i2c_rtc_read(rtcfd, 0x6F, &rtcdat[6], 0x1b, 5);
 
