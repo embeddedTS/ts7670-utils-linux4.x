@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
-/* Copyright (c) 2019, Technologic Systems Inc. */
+/* Copyright (c) 2019-2022 Technologic Systems, Inc. dba embeddedTS */
 
 #include <stdio.h>
 #include <unistd.h>
@@ -15,7 +15,7 @@
 #include "pwmlib.h"
 #include "i2c-rtc.h"
 
-const char copyright[] = "Copyright (c) Technologic Systems - " __DATE__ " - "
+const char copyright[] = "Copyright (c) embeddedTS - " __DATE__ " - "
   GITCOMMIT;
 
 int model = 0;
@@ -40,7 +40,7 @@ static void usage(char **argv) {
 	fprintf(stderr,
 	  "%s\n\n"
 	  "Usage: %s [OPTION] ...\n"
-	  "Technologic Systems Hardware access\n"
+	  "embeddedTS Hardware access\n"
 	  "\n"
 	  "  -i, --info              Print device information\n"
 	  "  -o, --rtcinfo           Print RTC power on/off timestamp\n"
