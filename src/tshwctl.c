@@ -215,8 +215,9 @@ int main(int argc, char **argv)
 		 * the compatible speed.
 		 */
 		speed = (1000000000/(opt_485speed*1.275));
-		pwm_write(0, 2, speed, speed/2);
 
+		pwm_enable(0, 2, 0);
+		pwm_write(0, 2, speed, speed/2);
 		pwm_enable(0, 2, 1);
 	}
 
