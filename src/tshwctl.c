@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
-#include "gpiolib.h"
+#include <gpiod.h>
 #include "pwmlib.h"
 #include "i2c-rtc.h"
 
@@ -72,6 +72,11 @@ int main(int argc, char **argv)
 	int opt_modbuspoweron = 0;
 	int opt_modbuspoweroff = 0;
 
+	struct gpiod_chip *chip1 = NULL;
+	struct gpiod_line *modbus_en_3vn = NULL;
+	struct gpiod_line *modbus_en_24v = NULL;
+	struct gpiod_line *modbus_fault = NULL;
+
 	int opt_485speed = 0;
 
 	static struct option long_options[] = {
@@ -114,9 +119,11 @@ int main(int argc, char **argv)
 			break;
 		  case '1':
 			opt_modbuspoweron = 1;
+			opt_modbuspoweroff = 0;
 			break;
 		  case 'Z':
 			opt_modbuspoweroff = 1;
+			opt_modbuspoweron = 0;
 			break;
 		  case '4':
 			opt_485speed = strtoul(optarg, NULL, 0);
@@ -208,45 +215,83 @@ int main(int argc, char **argv)
 		 * the compatible speed.
 		 */
 		speed = (1000000000/(opt_485speed*1.275));
-		pwm_write(0, 2, speed, speed/2);
 
+		pwm_enable(0, 2, 0);
+		pwm_write(0, 2, speed, speed/2);
 		pwm_enable(0, 2, 1);
 	}
 
+	if (opt_modbuspoweron || opt_modbuspoweroff) {
+		chip1 = gpiod_chip_open_by_number(1);
+		if (chip1 == NULL) {
+			fprintf(stderr, "Unable to open GPIO chip!\n");
+			return 1;
+		}
+
+		modbus_en_3vn = gpiod_chip_get_line(chip1, 15);
+		if (modbus_en_3vn == NULL) {
+			fprintf(stderr, "Unable to get GPIO line MODBUS_3V#_EN!\n");
+			return 1;
+		}
+
+		modbus_en_24v = gpiod_chip_get_line(chip1, 13);
+		if (modbus_en_24v == NULL) {
+			fprintf(stderr, "Unable to get GPIO line MODBUS_24V_EN!\n");
+			return 1;
+		}
+
+		modbus_fault = gpiod_chip_get_line(chip1, 14);
+		if (modbus_fault == NULL) {
+			fprintf(stderr, "Unable to get GPIO line MODBUS_FAULT!\n");
+			return 1;
+		}
+
+		if (gpiod_line_request_output(modbus_en_3vn, "tshwctl", 1) < 0) {
+			fprintf(stderr, "Unable to req GPIO line MODBUS_3V#_EN!\n");
+			return 1;
+		}
+
+		if (gpiod_line_request_output(modbus_en_24v, "tshwctl", 0) < 0) {
+			fprintf(stderr, "Unable to req GPIO line MODBUS_24V_EN!\n");
+			return 1;
+		}
+
+		if (gpiod_line_request_input(modbus_fault, "tshwctl") < 0) {
+			fprintf(stderr, "Unable to req GPIO line MODBUS_FAULT!\n");
+			return 1;
+		}
+	}
+
 	if(opt_modbuspoweron) {
-		gpio_export(45); /* 24 V Enable */
-		gpio_export(47); /* 3 V Enable # */
-		gpio_export(46); /* MODBUS Fault */
-
-		/* Disable all power, set everything as input */
-		gpio_direction(45, 0);
-		gpio_direction(47, 0);
-		gpio_direction(46, 0);
-
-		/* Set 3.3 V, wait, and check fault */
-		gpio_direction(47, 1);
-		gpio_write(47, 0);
+		/* All pins in a safe state at this point. Turn on 3.3 V, wait
+		 * and check for fault.
+		 */
+		gpiod_line_set_value(modbus_en_3vn, 0);
 		usleep(10000);
-		if (gpio_read(46) == 0) {
-			/* Disable 3 V and drive 24 V */
-			gpio_write(47, 1);
-			gpio_direction(45, 1);
-			gpio_write(45, 1);
+
+		if (gpiod_line_get_value(modbus_fault) == 0) {
+			/* No fault, disable 3 V and drive 24 V */
+			gpiod_line_set_value(modbus_en_24v, 1);
 			printf("modbuspoweron=1\n");
 		} else {
-			/* Failed for some reason, turn off 3.3 V out */
-			gpio_write(47, 1);
+			/* Fauled for some reason, disable 3.3 V out */
+			gpiod_line_set_value(modbus_en_3vn, 1);
 			printf("modbuspoweron=0\n");
 		}
 	}
 
-	if(opt_modbuspoweroff) {
-		gpio_export(45); /* 24 V Enable */
-		gpio_export(47); /* 3 V Enable # */
+	/* NOTE:
+	 * Since opt_modbuspoweron and opt_modbuspoweroff are mutually exclusive
+	 * from optarg settings, and the actual line request process puts the
+	 * pins in a safe state, there is no need for any further actions for
+	 * opt_modbuspoweroff.
+	 */
 
-		/* Disable power by setting everything to input */
-		gpio_direction(45, 0);
-		gpio_direction(47, 0);
+	if (opt_modbuspoweron || opt_modbuspoweroff) {
+		gpiod_line_release(modbus_en_3vn);
+		gpiod_line_release(modbus_en_24v);
+		gpiod_line_release(modbus_fault);
+		gpiod_chip_close(chip1);
 	}
 
 	return 0;
