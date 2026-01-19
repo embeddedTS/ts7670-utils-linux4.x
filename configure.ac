@@ -11,7 +11,10 @@ AM_INIT_AUTOMAKE([1.00 foreign no-define])
 AC_PROG_CC
 
 # Checks for libraries.
-AC_CHECK_LIB([gpiod], [gpiod_line_request_input], [], [AC_MSG_ERROR([libgpiod not found])])
+PKG_CHECK_MODULES([LIBGPIOD], [libgpiod >= 2.2], [], [
+  AC_MSG_ERROR([libgpiod is required but was not found])
+])
+
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h])
